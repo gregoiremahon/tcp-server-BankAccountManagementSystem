@@ -8,12 +8,5 @@ The main objective of this project is to gain hands-on experience with network p
 
 ## Technologies Used
 
-- Standard C libraries :
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <unistd.h>
+- Standard C libraries (socket, time, inet, ...)
 - Socket functions for network communication
