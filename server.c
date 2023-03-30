@@ -23,6 +23,7 @@ Compte comptes[] = {
     // {id_client, id_compte, password, solde}
     {1, 1001, "password1", 5000.0},
     {2, 1002, "password2", 3000.0},
+    {3, 0000, "p", 3999.0}
     
 };
 
@@ -163,7 +164,7 @@ int main() {
                 keep_client_connected = 0;
                 break;
             }
-            buffer[BUFFER_SIZE - 1] = '\0';
+            buffer[BUFFER_SIZE - 1] = '\0'; // ajout du caractère de fin de chaine
 
             if (sscanf(buffer, "AJOUT %d %d %s %lf", &id_client, &id_compte, password, &somme) == 4) {
                 if (AJOUT(id_client, id_compte, password, somme)) {
@@ -181,7 +182,7 @@ int main() {
                 
             } else if (sscanf(buffer, "SOLDE %d %d %s", &id_client, &id_compte, password) == 3) {
                 double solde_compte = SOLDE(id_client, id_compte, password);
-                if (solde_compte >= 0.0) {
+                if (solde_compte >= 0.0) { // seulement si compte pas en découvert
                     // snprintf : int snprintf(char *str, size_t size, const char *format, …);
                     snprintf(response, BUFFER_SIZE, "SOLDE DE VOTRE COMPTE : %.2lf $", solde_compte);
                 } else {
@@ -193,7 +194,7 @@ int main() {
                 char *operations_result = OPERATIONS(id_client, id_compte, password, operations_buffer, BUFFER_SIZE);
                 /* retourne un pointeur vers un buffer contenant les 10 dernières opérations formatées. Retourne NULL, si la requête n'a pas pu être traitée et envoie "KO" au client.*/
                 if (operations_result) {
-                    snprintf(response, BUFFER_SIZE, "RES_OPERATIONS\n%s", operations_result);
+                    snprintf(response, BUFFER_SIZE, "LISTE DES DERNIERES OPERATIONS : \n%s", operations_result);
                 } else {
                     strcpy(response, "KO\n");
                 }
