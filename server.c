@@ -29,7 +29,7 @@ Compte comptes[] = {
 
 int nombre_comptes = sizeof(comptes) / sizeof(comptes[0]);
 
-// enregistrer des operations
+// enregistrer des operations (lorsque le client ajoute ou retire de l'argent uniquement)
 void enregistrer_operation(Compte *compte, const char *type_operation, double montant) {
     Operation *operation = &compte->operations[compte->nombre_operations % 10];
     strcpy(operation->type_operation, type_operation);
@@ -56,6 +56,7 @@ int AJOUT(int id_client, int id_compte, const char *password, double somme) {
     Compte *compte = trouver_compte(id_client, id_compte, password);
     if (compte) {
         compte->solde += somme;
+        // Enregistre l'opération
         enregistrer_operation(compte, "AJOUT", somme);
         return 1;
     }
@@ -67,13 +68,13 @@ int RETRAIT(int id_client, int id_compte, const char *password, double somme) {
     Compte *compte = trouver_compte(id_client, id_compte, password);
     if (compte && compte->solde >= somme) {
         compte->solde -= somme;
-        enregistrer_operation(compte, "RETRAIT", somme);
+        enregistrer_operation(compte, "RETRAIT", somme); // Enregistre l'opération
         return 1;
     }
     return 0;
 }
 
-/* SOLDE <id_client id_compte password> permettra d'obtenir le solde du compte identifié par id_compte par le client id_client identifié avec password.*/
+/* SOLDE <id_client id_compte password> permettra d'obtenir le solde du compte identifié par id_compte par le client id_client identifié avec password. */
 double SOLDE(int id_client, int id_compte, const char *password) {
     Compte *compte = trouver_compte(id_client, id_compte, password);
     if (compte) {
@@ -82,7 +83,7 @@ double SOLDE(int id_client, int id_compte, const char *password) {
     return -1.0;
 }
 
-/* OPERATIONS <id_client id_compte password> permettra d'obtenir les 10 dernières opérations effectuées sur le compte identifié par id_compte. Cette opération ne peut être demandée que par le client id_client identifié avec password.*/
+/* OPERATIONS <id_client id_compte password> permettra d'obtenir les 10 dernières opérations effectuées sur le compte identifié par id_compte. Cette opération ne peut être demandée que par le client id_client identifié avec password. */
 char *OPERATIONS(int id_client, int id_compte, const char *password, char *buffer, size_t buffer_size) {
     Compte *compte = trouver_compte(id_client, id_compte, password);
     if (compte) {
@@ -194,7 +195,7 @@ int main() {
                 char *operations_result = OPERATIONS(id_client, id_compte, password, operations_buffer, BUFFER_SIZE);
                 /* retourne un pointeur vers un buffer contenant les 10 dernières opérations formatées. Retourne NULL, si la requête n'a pas pu être traitée et envoie "KO" au client.*/
                 if (operations_result) {
-                    snprintf(response, BUFFER_SIZE, "LISTE DES DERNIERES OPERATIONS : \n%s", operations_result);
+                    snprintf(response, BUFFER_SIZE, "RES_OPERATIONS : \n%s", operations_result);
                 } else {
                     strcpy(response, "KO\n");
                 }
