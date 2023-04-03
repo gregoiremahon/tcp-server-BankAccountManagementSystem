@@ -191,7 +191,7 @@ int main() {
                 }
                 
             } else if (sscanf(buffer, "OPERATIONS %d %d %s", &id_client, &id_compte, password) == 3) {
-                char operations_buffer[BUFFER_SIZE];
+                char operations_buffer[BUFFER_SIZE];²
                 char *operations_result = OPERATIONS(id_client, id_compte, password, operations_buffer, BUFFER_SIZE);
                 /* retourne un pointeur vers un buffer contenant les 10 dernières opérations formatées. Retourne NULL, si la requête n'a pas pu être traitée et envoie "KO" au client.*/
                 if (operations_result) {
