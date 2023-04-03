@@ -6,9 +6,6 @@
 //
 // client_udp.c V1
 
-#include "client.h"
-
-
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>

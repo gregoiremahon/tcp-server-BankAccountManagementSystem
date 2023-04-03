@@ -5,8 +5,6 @@
 //  Created by Grégoire Mahon on 29/03/2023.
 //
 // client_tcp.c V1
-#include "client.h"
-
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
