@@ -20,12 +20,13 @@ The main objective of this project is to gain hands-on experience with network p
 2. Compile both server and client code files:
 
     `cd tcp-server-BankAccountManagementSystem`
+    
     UDP socket :
 
     `gcc -o server_udp ./UDP/server.c`
 
     `gcc -o client_udp ./UDP/client.c`
-    
+
     Or TCP socket : 
 
     `gcc -o server_tcp ./TCP/server.c`
