@@ -71,7 +71,7 @@ int main() {
                 printf("ERROR : Resource temporarily unavailable");
                 tries_qty++;
                 sleep(tries_qty); // Attendre pendant 'retries' secondes avant de réessayer
-                printf("Aucune réponse du serveur, tentative %d...\n", retries);
+                printf("Aucune réponse du serveur, tentative %d...\n", tries_qty);
             } else {
                 perror("recvfrom");
                 break;
