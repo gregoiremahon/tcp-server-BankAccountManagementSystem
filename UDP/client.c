@@ -13,9 +13,11 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <errno.h>
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
+#define MAX_RETRIES 5
 
 int main() {
     // Informations requêtes :
@@ -26,7 +28,7 @@ int main() {
     int client_fd;
     struct sockaddr_in server_addr;
     char buffer[BUFFER_SIZE];
-
+    
     // Création du socket (UDP -> SOCK_DGRAM)
     // int socket(famille, type, protocole)
     client_fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -49,15 +51,35 @@ int main() {
             break;
         }*/
 
-    
         socklen_t addr_len = sizeof(server_addr);
-        sendto(client_fd, buffer, strlen(buffer), 0, (struct sockaddr *)&server_addr, addr_len);
+        
+        int tries_qty = 0;
+        int response_received = 0;
 
-        // Réception de la réponse du serveur
-        int len = recvfrom(client_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&server_addr, &addr_len);
-        buffer[len] = '\0';
-        printf("Réponse du serveur : %s\n", buffer);
-    
+        while (tries_qty < MAX_RETRIES && !response_received) {
+            // Envoi du paquet au serveur
+            socklen_t addr_len = sizeof(server_addr);
+            sendto(client_fd, buffer, strlen(buffer), 0, (struct sockaddr *)&server_addr, addr_len);
+
+            // Réception de la réponse du serveur
+            int response_len = recvfrom(client_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&server_addr, &addr_len);
+            if (response_len > 0) {
+                buffer[response_len] = '\0';
+                printf("Réponse du serveur : %s\n", buffer);
+                response_received = 1;
+            } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                printf("ERROR : Resource temporarily unavailable");
+                tries_qty++;
+                sleep(tries_qty); // Attendre pendant 'retries' secondes avant de réessayer
+                printf("Aucune réponse du serveur, tentative %d...\n", retries);
+            } else {
+                perror("recvfrom");
+                break;
+            }   
+        }
+        if (tries_qty == MAX_RETRIES) {
+            printf("Erreur : Aucune réponse du serveur après %d tentatives. Essayez de relancer le serveur et/ou de changer de numéro de port (port actuel : %d)\n", MAX_RETRIES, PORT);
+        }
     }
 
     close(client_fd);
