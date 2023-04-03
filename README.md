@@ -15,11 +15,11 @@ The main objective of this project is to gain hands-on experience with network p
 
 1. Clone the git repository:
 
-    `git clone https://github.com/gregoiremahon/tcp-server-BankAccountManagementSystem.git`
+    `git clone https://github.com/gregoiremahon/tcp-udp-server-BankAccountManagementSystem.git`
 
 2. Compile both server and client code files:
 
-    `cd tcp-server-BankAccountManagementSystem`
+    `cd tcp-udp-server-BankAccountManagementSystem`
     
     UDP socket :
 
