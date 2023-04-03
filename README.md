@@ -1,6 +1,6 @@
 # Bank Account Management System (UDP Server)
 
-This is a student project for the EI2I 3 training at Polytech Sorbonne, Semester 6. The purpose of this project is to create a simple UDP server that simulates a bank account management system.
+This is a student project for the EI2I 3 training at Polytech Sorbonne, Semester 6. The purpose of this project is to create two simple TCP and UDP servers that simulates a bank account management system.
 
 ## Objective
 
