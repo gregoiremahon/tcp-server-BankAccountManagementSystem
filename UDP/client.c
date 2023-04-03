@@ -14,6 +14,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <errno.h>
+#include <fcntl.h>
+
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
@@ -30,7 +32,7 @@ int main() {
     char buffer[BUFFER_SIZE];
     
     // Création du socket (UDP -> SOCK_DGRAM)
-    // int socket(famille, type, protocole)
+    // int socket(famille = AF_INET IPv4, type=SOCK_DGRAM udp, protocole=0 default)
     client_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (client_fd == -1) {
         perror("socket");
@@ -46,37 +48,54 @@ int main() {
     while (1) {
         printf("Entrez une requête (Respecter la syntaxe) : ");
         fgets(buffer, BUFFER_SIZE, stdin);
+        fflush(stdin);
 
         /*if (buffer[0] == 'q') {
             break;
         }*/
 
         socklen_t addr_len = sizeof(server_addr);
-        
+
+
         int tries_qty = 0;
         int response_received = 0;
-
+        
         while (tries_qty < MAX_RETRIES && !response_received) {
-            // Envoi du paquet au serveur
-            socklen_t addr_len = sizeof(server_addr);
-            sendto(client_fd, buffer, strlen(buffer), 0, (struct sockaddr *)&server_addr, addr_len);
+                
+                // Envoi du paquet au serveur
+                sendto(client_fd, buffer, strlen(buffer), 0, (struct sockaddr *)&server_addr, addr_len);
 
-            // Réception de la réponse du serveur
-            int response_len = recvfrom(client_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&server_addr, &addr_len);
-            if (response_len > 0) {
-                buffer[response_len] = '\0';
-                printf("Réponse du serveur : %s\n", buffer);
-                response_received = 1;
-            } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                printf("ERROR : Resource temporarily unavailable");
-                tries_qty++;
-                sleep(tries_qty); // Attendre pendant 'retries' secondes avant de réessayer
-                printf("Aucune réponse du serveur, tentative %d...\n", tries_qty);
-            } else {
-                perror("recvfrom");
-                break;
-            }   
-        }
+                // select() pour déterminer si le socket est prêt, réessaiera MAX_RETRIES si pas de réponse du serveur 
+                fd_set read_fds;
+                struct timeval timeout;
+                int select_result;
+
+                FD_ZERO(&read_fds);
+                FD_SET(client_fd, &read_fds);
+                timeout.tv_sec = tries_qty + 1; // timeout try_qty + 1s
+                timeout.tv_usec = 0;
+
+                select_result = select(client_fd + 1, &read_fds, NULL, NULL, &timeout);
+
+                if (select_result > 0) { // socket prêt : réception de la réponse du serveur
+                    int response_len = recvfrom(client_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&server_addr, &addr_len);
+                    if (response_len >= 1) {
+                        buffer[response_len] = '\0';
+                        printf("Réponse du serveur : %s\n", buffer);
+                        response_received = 1;
+                    }
+
+                } else if (select_result == 0) { // Le délai d'attente a expiré
+                    tries_qty++;
+                    printf("Aucune réponse du serveur, tentative %d...\r", tries_qty);
+                    fflush(stdout); // vide le buffer stdout
+
+                } else {
+                    perror("select");
+                    break;
+                }
+            }
+
         if (tries_qty == MAX_RETRIES) {
             printf("Erreur : Aucune réponse du serveur après %d tentatives. Essayez de relancer le serveur et/ou de changer de numéro de port (port actuel : %d)\n", MAX_RETRIES, PORT);
         }
