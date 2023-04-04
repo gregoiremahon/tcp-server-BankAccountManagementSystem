@@ -23,28 +23,32 @@
 
 int main() {
     // Informations requêtes :
-    char AJOUT_Request[48] = "AJOUT <id_client> <id_compte> <password> <somme>";
-    char RETRAIT_Request[50] = "RETRAIT <id_client> <id_compte> <password> <somme>";
-    char SOLDE_Request[40] = "SOLDE <id_client> <id_compte> <password>";
-    char OPERATIONS_Request[45] = "OPERATIONS <id_client> <id_compte> <password>";
-    int client_fd;
-    struct sockaddr_in server_addr;
-    char buffer[BUFFER_SIZE];
+    char AJOUT_Request[49] = "AJOUT <id_client> <id_compte> <password> <somme>\0";
+    char RETRAIT_Request[51] = "RETRAIT <id_client> <id_compte> <password> <somme>\0";
+    char SOLDE_Request[41] = "SOLDE <id_client> <id_compte> <password>\0";
+    char OPERATIONS_Request[46] = "OPERATIONS <id_client> <id_compte> <password>\0";
+  
+    
+    
     
     // Création du socket (UDP -> SOCK_DGRAM)
     // int socket(famille = AF_INET IPv4, type=SOCK_DGRAM udp, protocole=0 default)
-    client_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    int client_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (client_fd == -1) {
         perror("socket");
         exit(EXIT_FAILURE);
     }
 
     // Configuration de l'adresse du serveur
+    struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(PORT);
 
     printf("Bonjour, voici les requêtes disponibles :\nAjouter de l'argent à votre compte : %s\nRetirer de l'argent : %s\nAfficher votre solde : %s\nAfficher les 10 dernieres operations : %s\n", AJOUT_Request, RETRAIT_Request, SOLDE_Request, OPERATIONS_Request);
+    
+    char buffer[BUFFER_SIZE];
+
     while (1) {
         printf("Entrez une requête (Respecter la syntaxe) : ");
         fgets(buffer, BUFFER_SIZE, stdin);
@@ -74,8 +78,12 @@ int main() {
                 FD_SET(client_fd, &read_fds);
                 timeout.tv_sec = tries_qty + 1; // timeout try_qty + 1s
                 timeout.tv_usec = 0;
-
-                select_result = select(client_fd + 1, &read_fds, NULL, NULL, &timeout);
+                /* Les fonctions select() et pselect() permettent à un programme de surveiller plusieurs descripteurs de fichier, 
+                attendant qu'au moins l'un des descripteurs de fichier devienne « prêt » pour certaines classes d'opérations d'entrées-sorties (par exemple, entrée possible). 
+                Un descripteur de fichier est considéré comme prêt s'il est possible d'effectuer l'opération d'entrées-sorties correspondante (par exemple, un read(2)) sans bloquer.
+                (http://manpagesfr.free.fr/man/man2/select.2.html)
+                */
+                select_result = select(client_fd + 1, &read_fds, NULL, NULL, &timeout); // vérifie que le socket est prêt à recevoir des requêtes
 
                 if (select_result > 0) { // socket prêt : réception de la réponse du serveur
                     int response_len = recvfrom(client_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&server_addr, &addr_len);
