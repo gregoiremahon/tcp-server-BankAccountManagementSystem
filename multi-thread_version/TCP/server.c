@@ -35,7 +35,7 @@ Compte comptes[] = {
 };
 
 int nombre_comptes = sizeof(comptes) / sizeof(comptes[0]);
-
+int clients_number = 0;
 // enregistrer des operations (lorsque le client ajoute ou retire de l'argent uniquement)
 void enregistrer_operation(Compte *compte, const char *type_operation, double montant) {
     Operation *operation = &compte->operations[compte->nombre_operations % 10];
@@ -222,7 +222,9 @@ void *pthread_routine(void *arg) {
     char response[BUFFER_SIZE];
     int keep_client_connected = 1;
     char buffer[BUFFER_SIZE];
-
+    clients_number++;
+    printf("Nouveau client connecté, nombre de clients : %d\r", clients_number);
+    fflush(stdout);
     // Boucle do while -> tant que le client est connecté
     do {
         // Traitement de la requête et écriture de la réponse
