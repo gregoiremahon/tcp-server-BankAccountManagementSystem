@@ -14,7 +14,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <sys/socket.h>
 #define PORT 8080
 #define MAX_CLIENTS 10
 #define BUFFER_SIZE 1024
@@ -33,6 +33,9 @@ typedef struct Compte {
     Operation operations[10];
     int nombre_operations;
 } Compte;
+
+/* Thread routine to serve connection to client. */
+void *pthread_routine(void *arg);
 
 void enregistrer_operation(Compte *compte, const char *type_operation, double montant);
 Compte *trouver_compte(int id_client, int id_compte, const char *password);

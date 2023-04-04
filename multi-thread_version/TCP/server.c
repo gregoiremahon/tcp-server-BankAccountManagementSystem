@@ -15,23 +15,16 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <time.h> // "'time' must be declared before it is used (xCode err)"
+#include <time.h>
 #include <pthread.h>
 #include <signal.h>
 
 // See server.h for structs definition
 
-#define BACKLOG 10
-
 typedef struct pthread_arg_t {
     int new_socket_fd;
     struct sockaddr_in client_address;
-    /* TODO: Put arguments passed to threads here. See lines 116 and 139. */
 } pthread_arg_t;
-
-/* Thread routine to serve connection to client. */
-void *pthread_routine(void *arg);
-
 
 Compte comptes[] = {
     // {id_client, id_compte, password, solde}
@@ -174,18 +167,17 @@ int main() {
 
     printf("SERVER STARTED ON PORT : %d\n", PORT);
     printf("WAITING FOR CLIENT REQUESTS...\n");
+
     while (1) {
         /* Create pthread argument for each connection to client. */
-        /* TODO: malloc'ing before accepting a connection causes only one small
-         * memory when the program exits. It can be safely ignored.
-         */
+
         pthread_arg = (pthread_arg_t *)malloc(sizeof *pthread_arg);
         if (!pthread_arg) {
             perror("malloc");
             continue;
         }
 
-        /* Accept connection to client. */
+        /* Accept connection to client with the new socket. */
         client_address_len = sizeof pthread_arg->client_address;
         new_socket_fd = accept(socket_fd, (struct sockaddr *)&pthread_arg->client_address, &client_address_len);
         if (new_socket_fd == -1) {
@@ -194,11 +186,8 @@ int main() {
             continue;
         }
 
-        /* Initialise pthread argument. */
+        /* Initialise pthread argument (creating new socket at each connection) */
         pthread_arg->new_socket_fd = new_socket_fd;
-        /* TODO: Initialise arguments passed to threads here. See lines 22 and
-         * 139.
-         */
 
         /* Create thread to serve connection to client. */
         if (pthread_create(&pthread, &pthread_attr, pthread_routine, (void *)pthread_arg) != 0) {
@@ -206,37 +195,37 @@ int main() {
             free(pthread_arg);
             continue;
         }
-
-        //close(client_fd);
         
     }
     return 0;
 }
 
 void *pthread_routine(void *arg) {
+
+    // Création d'un nouveau socket à chaque nouvelle connexion
+
     pthread_arg_t *pthread_arg = (pthread_arg_t *)arg;
     int new_socket_fd = pthread_arg->new_socket_fd;
     struct sockaddr_in client_address = pthread_arg->client_address;
     socklen_t client_address_len;
-    /* TODO: Get arguments passed to threads here. See lines 22 and 116. */
 
     free(arg);
 
-        
     if (new_socket_fd < 0) {
         perror("accept");
         exit(EXIT_FAILURE);
     }
+
     int id_client, id_compte;
     char password[32];
     double somme;
     char response[BUFFER_SIZE];
     int keep_client_connected = 1;
     char buffer[BUFFER_SIZE];
-    
+
+    // Boucle do while -> tant que le client est connecté
     do {
         // Traitement de la requête et écriture de la réponse
-        // Lecture de la requête du client
         ssize_t bytes_read = read(new_socket_fd, buffer, BUFFER_SIZE);
         if (bytes_read <= 0) {
             keep_client_connected = 0;
@@ -295,11 +284,3 @@ void *pthread_routine(void *arg) {
     close(new_socket_fd);
     return NULL;
 }
-
-void signal_handler(int signal_number) {
-    /* TODO: Put exit cleanup code here. */
-    exit(0);
-}
-
-
-// TO DO : HASH DES MOTS DE PASSE, VERIFICATION DES SOMMES A AJOUTER ET RETIRER (SI ASSEZ DE SOLDE, SI VALEURS UNIQUEMENT POSITIVES ETC)
