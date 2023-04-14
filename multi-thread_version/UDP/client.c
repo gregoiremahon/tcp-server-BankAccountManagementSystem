@@ -27,7 +27,10 @@ int main() {
     char RETRAIT_Request[51] = "RETRAIT <id_client> <id_compte> <password> <somme>\0";
     char SOLDE_Request[41] = "SOLDE <id_client> <id_compte> <password>\0";
     char OPERATIONS_Request[46] = "OPERATIONS <id_client> <id_compte> <password>\0";
-
+  
+    
+    
+    
     // Création du socket (UDP -> SOCK_DGRAM)
     // int socket(famille = AF_INET IPv4, type=SOCK_DGRAM udp, protocole=0 default)
     int client_fd = socket(AF_INET, SOCK_DGRAM, 0);
