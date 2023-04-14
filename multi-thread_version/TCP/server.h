@@ -38,7 +38,7 @@ typedef struct Compte {
 void *pthread_routine(void *arg);
 
 void enregistrer_operation(Compte *compte, const char *type_operation, double montant);
-Compte *trouver_compte(int id_client, int id_compte, const char *password);
+Compte *find_accound_by_ID(int id_client, int id_compte, const char *password);
 int AJOUT(int id_client, int id_compte, const char *password, double somme);
 int RETRAIT(int id_client, int id_compte, const char *password, double somme);
 double SOLDE(int id_client, int id_compte, const char *password);

@@ -47,7 +47,7 @@ void enregistrer_operation(Compte *compte, const char *type_operation, double mo
 }
 
 // Trouver un compte par id_client, id_compte et password
-Compte *trouver_compte(int id_client, int id_compte, const char *password) {
+Compte *find_accound_by_ID(int id_client, int id_compte, const char *password) {
     for (int i = 0; i < nombre_comptes; i++) {
         if (comptes[i].id_client == id_client && comptes[i].id_compte == id_compte &&
             strcmp(comptes[i].password, password) == 0) {
@@ -60,7 +60,7 @@ Compte *trouver_compte(int id_client, int id_compte, const char *password) {
 // Ajouter une somme à un compte :
 /* AJOUT <id_client id_compte password somme> permettra d'ajouter la somme sur le compte identifié par id_compte par le client id_client identifié avec password. */
 int AJOUT(int id_client, int id_compte, const char *password, double somme) {
-    Compte *compte = trouver_compte(id_client, id_compte, password);
+    Compte *compte = find_accound_by_ID(id_client, id_compte, password);
     if (compte) {
         compte->solde += somme;
         // Enregistre l'opération
@@ -72,7 +72,7 @@ int AJOUT(int id_client, int id_compte, const char *password, double somme) {
 
 /* RETRAIT <id_client id_compte password somme> permettra de retirer la somme sur le compte identifié par id_compte par le client id_client identifié avec passeword.*/
 int RETRAIT(int id_client, int id_compte, const char *password, double somme) {
-    Compte *compte = trouver_compte(id_client, id_compte, password);
+    Compte *compte = find_accound_by_ID(id_client, id_compte, password);
     if (compte && compte->solde >= somme) {
         compte->solde -= somme;
         enregistrer_operation(compte, "RETRAIT", somme); // Enregistre l'opération
@@ -83,16 +83,17 @@ int RETRAIT(int id_client, int id_compte, const char *password, double somme) {
 
 /* SOLDE <id_client id_compte password> permettra d'obtenir le solde du compte identifié par id_compte par le client id_client identifié avec password. */
 double SOLDE(int id_client, int id_compte, const char *password) {
-    Compte *compte = trouver_compte(id_client, id_compte, password);
+    Compte *compte = find_accound_by_ID(id_client, id_compte, password);
     if (compte) {
         return compte->solde;
     }
     return -1.0;
 }
 
-/* OPERATIONS <id_client id_compte password> permettra d'obtenir les 10 dernières opérations effectuées sur le compte identifié par id_compte. Cette opération ne peut être demandée que par le client id_client identifié avec password. */
+/* OPERATIONS <id_client id_compte password> permettra d'obtenir les 10 dernières opérations effectuées sur le compte identifié par id_compte. 
+Cette opération ne peut être demandée que par le client id_client identifié avec password. */
 char *OPERATIONS(int id_client, int id_compte, const char *password, char *buffer, size_t buffer_size) {
-    Compte *compte = trouver_compte(id_client, id_compte, password);
+    Compte *compte = find_accound_by_ID(id_client, id_compte, password);
     if (compte) {
         int start = (compte->nombre_operations > 10) ? compte->nombre_operations - 10 : 0;
         buffer[0] = '\0';
