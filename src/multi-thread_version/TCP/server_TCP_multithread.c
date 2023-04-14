@@ -1,10 +1,10 @@
-// SOCKET UDP
+//
 //  server.c
 //  Projet_Reseaux_MAHON_LELONG
 //
 //  Created by Grégoire Mahon on 29/03/2023.
 //
-// server_udp.c V1
+// server_tcp.c V1
 #include "server.h"
 
 
@@ -15,20 +15,26 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <time.h> // "'time' must be declared before it is used (xCode err)"
+#include <time.h>
+#include <pthread.h>
+#include <signal.h>
 
 // See server.h for structs definition
+
+typedef struct pthread_arg_t {
+    int new_socket_fd;
+    struct sockaddr_in client_address;
+} pthread_arg_t;
 
 Compte comptes[] = {
     // {id_client, id_compte, password, solde}
     {1, 1001, "password1", 5000.0},
     {2, 1002, "password2", 3000.0},
     {3, 0000, "p", 3999.0}
-    
 };
 
 int nombre_comptes = sizeof(comptes) / sizeof(comptes[0]);
-
+int clients_number = 0;
 // enregistrer des operations (lorsque le client ajoute ou retire de l'argent uniquement)
 void enregistrer_operation(Compte *compte, const char *type_operation, double montant) {
     Operation *operation = &compte->operations[compte->nombre_operations % 10];
@@ -103,19 +109,24 @@ char *OPERATIONS(int id_client, int id_compte, const char *password, char *buffe
 
 
 int main() {
-    int server_fd; // server socket
+    int socket_fd; // server socket
     int client_fd; // client socket
     int addr_len; // client_addr struct size
+    int new_socket_fd;
     struct sockaddr_in server_addr, client_addr;
+    socklen_t client_address_len;
+    pthread_attr_t pthread_attr;
+    pthread_arg_t *pthread_arg;
+    pthread_t pthread;
     char buffer[BUFFER_SIZE]; // store data receved from client
 
     // create server socket
     /* AF_INET : IPv4
-       SOCK_DGRAM : UDP socket
-       0 : default SOCK_DGRAM protocol : TCP protocol ??  */
-    server_fd = socket(AF_INET, SOCK_DGRAM, 0);
+       SOCK_STREAM : TCP socket
+       0 : default SOCK_STREAM protocol : TCP protocol */
+    socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     
-    if (server_fd == -1) {
+    if (socket_fd == -1) {
         //print error if socket creation failed
         perror("socket");
         exit(EXIT_FAILURE);
@@ -131,25 +142,95 @@ int main() {
     server_addr.sin_port = htons(PORT);
 
     // Bind server_addr (adress and port) to socket
-    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    if (bind(socket_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("bind");
+        exit(EXIT_FAILURE);
+    }
+
+    // Listen : accept incoming connections
+    if (listen(socket_fd, MAX_CLIENTS) < 0) {
+        perror("listen");
         exit(EXIT_FAILURE);
     }
 
     addr_len = sizeof(client_addr);
     
+     /* Initialise pthread attribute to create detached threads. */
+    if (pthread_attr_init(&pthread_attr) != 0) {
+        perror("pthread_attr_init");
+        exit(1);
+    }
+    if (pthread_attr_setdetachstate(&pthread_attr, PTHREAD_CREATE_DETACHED) != 0) {
+        perror("pthread_attr_setdetachstate");
+        exit(1);
+    }
+
     printf("SERVER STARTED ON PORT : %d\n", PORT);
     printf("WAITING FOR CLIENT REQUESTS...\n");
 
     while (1) {
+        /* Create pthread argument for each connection to client. */
 
-        int id_client, id_compte;
-        char password[32];
-        double somme;
-        char response[BUFFER_SIZE];
-      
-        ssize_t bytes_read = recvfrom(server_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, (socklen_t *)&addr_len);
+        pthread_arg = (pthread_arg_t *)malloc(sizeof *pthread_arg);
+        if (!pthread_arg) {
+            perror("malloc");
+            continue;
+        }
+
+        /* Accept connection to client with the new socket. */
+        client_address_len = sizeof pthread_arg->client_address;
+        new_socket_fd = accept(socket_fd, (struct sockaddr *)&pthread_arg->client_address, &client_address_len);
+        if (new_socket_fd == -1) {
+            perror("accept");
+            free(pthread_arg);
+            continue;
+        }
+
+        /* Initialise pthread argument (creating new socket at each connection) */
+        pthread_arg->new_socket_fd = new_socket_fd;
+
+        /* Create thread to serve connection to client. */
+        if (pthread_create(&pthread, &pthread_attr, pthread_routine, (void *)pthread_arg) != 0) {
+            perror("pthread_create");
+            free(pthread_arg);
+            continue;
+        }
+        
+    }
+    return 0;
+}
+
+void *pthread_routine(void *arg) {
+
+    // Création d'un nouveau socket à chaque nouvelle connexion
+
+    pthread_arg_t *pthread_arg = (pthread_arg_t *)arg;
+    int new_socket_fd = pthread_arg->new_socket_fd;
+    struct sockaddr_in client_address = pthread_arg->client_address;
+    socklen_t client_address_len;
+
+    free(arg);
+
+    if (new_socket_fd < 0) {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+
+    int id_client, id_compte;
+    char password[32];
+    double somme;
+    char response[BUFFER_SIZE];
+    int keep_client_connected = 1;
+    char buffer[BUFFER_SIZE];
+    clients_number++;
+    printf("Nouveau client connecté, nombre de clients : %d\r", clients_number);
+    fflush(stdout);
+    // Boucle do while -> tant que le client est connecté
+    do {
+        // Traitement de la requête et écriture de la réponse
+        ssize_t bytes_read = read(new_socket_fd, buffer, BUFFER_SIZE);
         if (bytes_read <= 0) {
+            keep_client_connected = 0;
             break;
         }
         buffer[BUFFER_SIZE - 1] = '\0'; // ajout du caractère de fin de chaine
@@ -192,19 +273,16 @@ int main() {
         }
 
         // Envoi de la réponse au client
-        sendto(server_fd, response, strlen(response), 0, (struct sockaddr *)&client_addr, addr_len);
+        send(new_socket_fd, response, strlen(response), 0);
         //send(client_fd, buffer, strlen(buffer), 0); --> send request back
         
         // if client sends "QUIT", he gets disconnected
         if (strcmp(buffer, "QUIT") == 0) {
-            break;
+            keep_client_connected = 0;
         }
 
-        close(client_fd);
-        
-    }
-    return 0;
+    } while (keep_client_connected);
+
+    close(new_socket_fd);
+    return NULL;
 }
-
-
-// TO DO : HASH DES MOTS DE PASSE, VERIFICATION DES SOMMES A AJOUTER ET RETIRER (SI ASSEZ DE SOLDE, SI VALEURS UNIQUEMENT POSITIVES ETC)

@@ -1,10 +1,10 @@
-//
+// SOCKET UDP
 //  server.c
 //  Projet_Reseaux_MAHON_LELONG
 //
 //  Created by Grégoire Mahon on 29/03/2023.
 //
-// server_tcp.c V1
+// server_udp.c V1
 #include "server.h"
 
 
@@ -24,7 +24,6 @@ Compte comptes[] = {
     {1, 1001, "password1", 5000.0},
     {2, 1002, "password2", 3000.0},
     {3, 0000, "p", 3999.0}
-    
 };
 
 int nombre_comptes = sizeof(comptes) / sizeof(comptes[0]);
@@ -111,9 +110,9 @@ int main() {
 
     // create server socket
     /* AF_INET : IPv4
-       SOCK_STREAM : TCP socket
-       0 : default SOCK_STREAM protocol : TCP protocol */
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
+       SOCK_DGRAM : UDP socket
+       0 : default SOCK_DGRAM protocol : TCP protocol ??  */
+    server_fd = socket(AF_INET, SOCK_DGRAM, 0);
     
     if (server_fd == -1) {
         //print error if socket creation failed
@@ -136,85 +135,69 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    // Listen : accept incoming connections
-    if (listen(server_fd, MAX_CLIENTS) < 0) {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
-
     addr_len = sizeof(client_addr);
     
     printf("SERVER STARTED ON PORT : %d\n", PORT);
     printf("WAITING FOR CLIENT REQUESTS...\n");
+
     while (1) {
-        client_fd = accept(server_fd, (struct sockaddr *)&client_addr, (socklen_t *)&addr_len);
-        if (client_fd < 0) {
-            perror("accept");
-            exit(EXIT_FAILURE);
-        }
+
         int id_client, id_compte;
         char password[32];
         double somme;
         char response[BUFFER_SIZE];
-        int keep_client_connected = 1;
-        
-        do {
-            // Traitement de la requête et écriture de la réponse
-            // Lecture de la requête du client
-            ssize_t bytes_read = read(client_fd, buffer, BUFFER_SIZE);
-            if (bytes_read <= 0) {
-                keep_client_connected = 0;
-                break;
-            }
-            buffer[BUFFER_SIZE - 1] = '\0'; // ajout du caractère de fin de chaine
+      
+        ssize_t bytes_read = recvfrom(server_fd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, (socklen_t *)&addr_len);
+        if (bytes_read <= 0) {
+            break;
+        }
+        buffer[BUFFER_SIZE - 1] = '\0'; // ajout du caractère de fin de chaine
 
-            if (sscanf(buffer, "AJOUT %d %d %s %lf", &id_client, &id_compte, password, &somme) == 4) {
-                if (AJOUT(id_client, id_compte, password, somme)) {
-                    strcpy(response, "OK\n");
-                } else {
-                    strcpy(response, "KO\n");
-                }
-                
-            } else if (sscanf(buffer, "RETRAIT %d %d %s %lf", &id_client, &id_compte, password, &somme) == 4) {
-                if (RETRAIT(id_client, id_compte, password, somme)) {
-                    strcpy(response, "OK\n");
-                } else {
-                    strcpy(response, "KO\n");
-                }
-                
-            } else if (sscanf(buffer, "SOLDE %d %d %s", &id_client, &id_compte, password) == 3) {
-                double solde_compte = SOLDE(id_client, id_compte, password);
-                if (solde_compte >= 0.0) { // seulement si compte pas en découvert
-                    // snprintf : int snprintf(char *str, size_t size, const char *format, …);
-                    snprintf(response, BUFFER_SIZE, "SOLDE DE VOTRE COMPTE : %.2lf $", solde_compte);
-                } else {
-                    strcpy(response, "KO\n");
-                }
-                
-            } else if (sscanf(buffer, "OPERATIONS %d %d %s", &id_client, &id_compte, password) == 3) {
-                char operations_buffer[BUFFER_SIZE];
-                char *operations_result = OPERATIONS(id_client, id_compte, password, operations_buffer, BUFFER_SIZE);
-                /* retourne un pointeur vers un buffer contenant les 10 dernières opérations formatées. Retourne NULL, si la requête n'a pas pu être traitée et envoie "KO" au client.*/
-                if (operations_result) {
-                    snprintf(response, BUFFER_SIZE, "RES_OPERATIONS : \n%s", operations_result);
-                } else {
-                    strcpy(response, "KO\n");
-                }
-                
+        if (sscanf(buffer, "AJOUT %d %d %s %lf", &id_client, &id_compte, password, &somme) == 4) {
+            if (AJOUT(id_client, id_compte, password, somme)) {
+                strcpy(response, "OK\n");
             } else {
                 strcpy(response, "KO\n");
             }
-
-            // Envoi de la réponse au client
-            send(client_fd, response, strlen(response), 0);
-            //send(client_fd, buffer, strlen(buffer), 0); --> send request back
             
-            // if client sends "QUIT", he gets disconnected
-            if (strcmp(buffer, "QUIT") == 0) {
-                keep_client_connected = 0;
+        } else if (sscanf(buffer, "RETRAIT %d %d %s %lf", &id_client, &id_compte, password, &somme) == 4) {
+            if (RETRAIT(id_client, id_compte, password, somme)) {
+                strcpy(response, "OK\n");
+            } else {
+                strcpy(response, "KO\n");
             }
+            
+        } else if (sscanf(buffer, "SOLDE %d %d %s", &id_client, &id_compte, password) == 3) {
+            double solde_compte = SOLDE(id_client, id_compte, password);
+            if (solde_compte >= 0.0) { // seulement si compte pas en découvert
+                // snprintf : int snprintf(char *str, size_t size, const char *format, …);
+                snprintf(response, BUFFER_SIZE, "SOLDE DE VOTRE COMPTE : %.2lf $", solde_compte);
+            } else {
+                strcpy(response, "KO\n");
+            }
+            
+        } else if (sscanf(buffer, "OPERATIONS %d %d %s", &id_client, &id_compte, password) == 3) {
+            char operations_buffer[BUFFER_SIZE];
+            char *operations_result = OPERATIONS(id_client, id_compte, password, operations_buffer, BUFFER_SIZE);
+            /* retourne un pointeur vers un buffer contenant les 10 dernières opérations formatées. Retourne NULL, si la requête n'a pas pu être traitée et envoie "KO" au client.*/
+            if (operations_result) {
+                snprintf(response, BUFFER_SIZE, "RES_OPERATIONS : \n%s", operations_result);
+            } else {
+                strcpy(response, "KO\n");
+            }
+            
+        } else {
+            strcpy(response, "KO\n");
+        }
 
-        } while (keep_client_connected);
+        // Envoi de la réponse au client
+        sendto(server_fd, response, strlen(response), 0, (struct sockaddr *)&client_addr, addr_len);
+        //send(client_fd, buffer, strlen(buffer), 0); --> send request back
+        
+        // if client sends "QUIT", he gets disconnected
+        if (strcmp(buffer, "QUIT") == 0) {
+            break;
+        }
 
         close(client_fd);
         
