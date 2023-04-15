@@ -8,7 +8,7 @@ UDP_SRC = ./src/UDP
 MT_TCP_SRC = ./src/multi-thread_version/TCP
 MT_UDP_SRC = ./src/multi-thread_version/UDP
 
-all: create_output_dir $(TARGET_PREFIX)client_TCP $(TARGET_PREFIX)server_TCP_mono-client $(TARGET_PREFIX)client_UDP $(TARGET_PREFIX)server_UDP_mono-client $(TARGET_PREFIX)client_TCP_mt $(TARGET_PREFIX)server_TCP_multithread $(TARGET_PREFIX)client_UDP_mt $(TARGET_PREFIX)server_UDP_multithread
+all: create_output_dir $(TARGET_PREFIX)client_TCP $(TARGET_PREFIX)server_TCP_mono-client $(TARGET_PREFIX)client_UDP $(TARGET_PREFIX)server_UDP_mono-client $(TARGET_PREFIX)server_TCP_multithread $(TARGET_PREFIX)server_UDP_multithread
 
 create_output_dir:
 	mkdir -p $(OUTPUT_DIR)
@@ -25,14 +25,8 @@ $(TARGET_PREFIX)client_UDP: $(UDP_SRC)/client_UDP.c
 $(TARGET_PREFIX)server_UDP_mono-client: $(UDP_SRC)/server_UDP_mono-client.c $(UDP_SRC)/server.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-$(TARGET_PREFIX)client_TCP_mt: $(MT_TCP_SRC)/client_TCP.c
-	$(CC) $(CFLAGS) -o $@ $^
-
 $(TARGET_PREFIX)server_TCP_multithread: $(MT_TCP_SRC)/server_TCP_multithread.c $(MT_TCP_SRC)/server.h
 	$(CC) $(CFLAGS) -o $@ $<
-
-$(TARGET_PREFIX)client_UDP_mt: $(MT_UDP_SRC)/client_UDP.c
-	$(CC) $(CFLAGS) -o $@ $^
 
 $(TARGET_PREFIX)server_UDP_multithread: $(MT_UDP_SRC)/server_UDP_multithread.c $(MT_UDP_SRC)/server.h
 	$(CC) $(CFLAGS) -o $@ $<

@@ -20,10 +20,10 @@
 // See server.h for structs definition
 
 Compte comptes[] = {
-    // {id_client, id_compte, password, solde}
-    {1, 1001, "password1", 5000.0},
-    {2, 1002, "password2", 3000.0},
-    {3, 0000, "p", 3999.0}
+    // {id_client, id_compte, password, solde, {{OPERATIONS}}, nombre_operations}
+    {1, 1001, "password1", 5000.0, {{"", "", 0}}, 0},
+    {2, 1002, "password2", 3000.0, {{"", "", 0}}, 0},
+    {3, 0000, "p", 3999.0, {{"", "", 0}}, 0}
 };
 
 int nombre_comptes = sizeof(comptes) / sizeof(comptes[0]);

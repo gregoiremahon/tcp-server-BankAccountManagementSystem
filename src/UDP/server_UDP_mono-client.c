@@ -20,10 +20,10 @@
 // See server.h for structs definition
 
 Compte comptes[] = {
-    // {id_client, id_compte, password, solde}
-    {1, 1001, "password1", 5000.0},
-    {2, 1002, "password2", 3000.0},
-    {3, 0000, "p", 3999.0}
+    // {id_client, id_compte, password, solde, {{OPERATIONS}}, nombre_operations}
+    {1, 1001, "password1", 5000.0, {{"", "", 0}}, 0},
+    {2, 1002, "password2", 3000.0, {{"", "", 0}}, 0},
+    {3, 0000, "p", 3999.0, {{"", "", 0}}, 0}
 };
 
 int nombre_comptes = sizeof(comptes) / sizeof(comptes[0]);
@@ -103,7 +103,7 @@ char *OPERATIONS(int id_client, int id_compte, const char *password, char *buffe
 
 int main() {
     int server_fd; // server socket
-    int client_fd; // client socket
+    //int client_fd; // client socket
     int addr_len; // client_addr struct size
     struct sockaddr_in server_addr, client_addr;
     char buffer[BUFFER_SIZE]; // store data receved from client
@@ -199,7 +199,7 @@ int main() {
             break;
         }
 
-        close(client_fd);
+        //close(client_fd);
         
     }
     return 0;
