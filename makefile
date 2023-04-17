@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pthread
-OUTPUT_DIR = ./app
+OUTPUT_DIR = ./bin
 TARGET_PREFIX = $(OUTPUT_DIR)/
 
 TCP_SRC = ./src/TCP
