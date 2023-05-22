@@ -1,6 +1,6 @@
-# Bank Account Management System (UDP Server)
+# Bank Account Management System (TCP/UDP Server)
 
-This is a student project for the EI2I 3 training at Polytech Sorbonne, Semester 6. The purpose of this project is to create two simple TCP and UDP servers that simulates a bank account management system.
+This is a student project for the EI2I 3 training at Polytech Sorbonne, Semester 6. The purpose of this project is to create two simple TCP and UDP servers that simulate a bank account management system.
 
 ## Objective
 
@@ -17,28 +17,42 @@ The main objective of this project is to gain hands-on experience with network p
 
     `git clone https://github.com/gregoiremahon/tcp-udp-server-BankAccountManagementSystem.git`
 
-2. Compile both server and client code files:
+2. Move to the root directory of the project:
 
     `cd tcp-udp-server-BankAccountManagementSystem`
-    
-    UDP socket :
 
-    `gcc -o server_udp ./UDP/server.c`
+3. Compile both server and client code files using the makefile:
 
-    `gcc -o client_udp ./UDP/client.c`
+    `make`
 
-    Or TCP socket : 
+This will create a new directory named `bin` containing the server and client executables.
 
-    `gcc -o server_tcp ./TCP/server.c`
+4. Run the server in a terminal. 
 
-    `gcc -o client_tcp ./TCP/client.c`
-    
+    For single client TCP version:
 
-3. Run the server in a terminal:
-    `./server_udp`
+    `./bin/server_TCP_mono-client`
 
+    For single client UDP version:
 
-4. Run the client in another terminal:
-    `./client_udp`
+    `./bin/server_UDP_mono-client`
 
-5. Follow the instructions displayed by the client program to interact with the bank account management system.
+    For multi-threaded TCP version:
+
+    `./bin/server_TCP_multithread`
+
+    For multi-threaded UDP version:
+
+    `./bin/server_UDP_multithread`
+
+5. Run the client in another terminal. 
+
+    For TCP:
+
+    `./bin/client_TCP`
+
+    For UDP:
+
+    `./bin/client_UDP`
+
+6. Follow the instructions displayed by the client program to interact with the bank account management system.

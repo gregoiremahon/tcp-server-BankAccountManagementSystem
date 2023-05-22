@@ -50,10 +50,6 @@ int main() {
         printf("Entrez une requête (Respecter la syntaxe) : ");
         fgets(buffer, BUFFER_SIZE, stdin);
 
-        /*if (buffer[0] == 'q') {
-            break;
-        }*/
-
         // Envoi de la requête au serveur
         send(client_fd, buffer, strlen(buffer), 0);
 

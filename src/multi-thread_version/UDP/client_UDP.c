@@ -53,14 +53,7 @@ int main() {
         printf("Entrez une requête (Respecter la syntaxe) : ");
         fgets(buffer, BUFFER_SIZE, stdin);
         fflush(stdin);
-
-        /*if (buffer[0] == 'q') {
-            break;
-        }*/
-
         socklen_t addr_len = sizeof(server_addr);
-
-
         int tries_qty = 0;
         int response_received = 0;
         
