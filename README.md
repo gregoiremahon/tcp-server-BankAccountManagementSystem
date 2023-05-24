@@ -29,30 +29,30 @@ The main objective of this project is to gain hands-on experience with network p
 
 4. Run the server in a terminal. 
 
-    For single client TCP version:
+    - For single client TCP version:
 
-    `./bin/server_TCP_mono-client`
+        `./bin/server_TCP_mono-client`
 
-    For single client UDP version:
+    - For single client UDP version:
 
-    `./bin/server_UDP_mono-client`
+        `./bin/server_UDP_mono-client`
 
-    For multi-threaded TCP version:
+    - For multi-threaded TCP version:
 
-    `./bin/server_TCP_multithread`
+        `./bin/server_TCP_multithread`
 
-    For multi-threaded UDP version:
+    - For multi-threaded UDP version:
 
-    `./bin/server_UDP_multithread`
+        `./bin/server_UDP_multithread`
 
 5. Run the client in another terminal. 
 
-    For TCP:
+    - For TCP:
 
-    `./bin/client_TCP`
+        `./bin/client_TCP`
 
-    For UDP:
+    - For UDP:
 
-    `./bin/client_UDP`
+        `./bin/client_UDP`
 
 6. Follow the instructions displayed by the client program to interact with the bank account management system.
