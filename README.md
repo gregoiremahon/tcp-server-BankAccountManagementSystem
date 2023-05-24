@@ -25,7 +25,7 @@ The main objective of this project is to gain hands-on experience with network p
 
     `make`
 
-This will create a new directory named `bin` containing the server and client executables.
+    This will create a new directory named `bin` containing the server and client executables.
 
 4. Run the server in a terminal. 
 
